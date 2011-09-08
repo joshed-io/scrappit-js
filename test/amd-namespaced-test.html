@@ -1,0 +1,46 @@
+<!-- Make sure to run 'make' before running this test -->
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv='Content-type' content='text/html; charset=utf-8'>
+  <title>scrappit.js namespaced amd tests</title>
+  <link rel='stylesheet' href='../vendor/qunit/qunit.css' type='text/css' charset='utf-8'>
+  <script src='../vendor/qunit/qunit.js' type='text/javascript' charset='utf-8'></script>
+  <script type='text/javascript' src='../build/scrappit-amd.js'></script>
+</head>
+<body>
+<h1 id='qunit-header'>scrappit.js AMD tests</h1>
+
+<h2 id='qunit-banner'></h2>
+
+<h2 id='qunit-userAgent'></h2>
+<ol id='qunit-tests'></ol>
+
+<script type='text/javascript' charset='utf-8'>
+  var wait = 500;
+  var deps = ["../dist/scripts/one.js?_=" + new Date().getTime(),
+    "../dist/scripts/two.js?_=" + new Date().getTime()];
+
+  function ensureNoGlobalAmd() {
+    equal(typeof define, "undefined");
+    equal(typeof require, "undefined");
+    equal(typeof requirejs, "undefined");
+  }
+
+  QUnit.module('scrappit amd');
+
+  QUnit.test('scrappit should initialize with amd support when present', function() {
+    ensureNoGlobalAmd();
+    ok(scrappit.amd);
+  });
+
+  QUnit.test('scrappit should export with namespaced amd', function() {
+    ensureNoGlobalAmd();
+    ok(scrappit.define);
+    ok(scrappit.require);
+    ok(scrappit.requirejs);
+  });
+
+</script>
+</body>
+</html>

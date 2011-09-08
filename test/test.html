@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv='Content-type' content='text/html; charset=utf-8'>
+  <title>scrappit.js core tests</title>
+  <link rel='stylesheet' href='../vendor/qunit/qunit.css' type='text/css' charset='utf-8'>
+  <script src='../vendor/qunit/qunit.js' type='text/javascript' charset='utf-8'></script>
+  <script type='text/javascript'>
+    var head = document.getElementsByTagName("head")[0] || document.documentElement;
+    var global = this;
+
+    function load(url, cb) {
+      if (typeof(url) !== "string") {
+        cb = url;
+        url = "../scripts/src/scrappit.js";
+      }
+
+      (function(g,b,d){var c=b.head||b.getElementsByTagName("head"),D="readyState",E="onreadystatechange",F="DOMContentLoaded",G="addEventListener",H=setTimeout;
+      H(function(){if("item"in c){if(!c[0]){H(arguments.callee,25);return}c=c[0]}var a=b.createElement("script"),e=false;a.onload=a[E]=function(){if((a[D]&&a[D]!=="complete"&&a[D]!=="loaded")||e){return false}a.onload=a[E]=null;e=true;cb()};
+      a.src=url;
+      c.insertBefore(a,c.firstChild)},0);if(b[D]==null&&b[G]){b[D]="loading";b[G](F,d=function(){b.removeEventListener(F,d,false);b[D]="complete"},false)}})(this,document);
+    }
+    function unload() {
+      global.scrappit.close();
+    }
+  </script>
+  <script type='text/javascript' src='../scripts/src/scrappit.js'></script>
+</head>
+<body>
+<h1 id='qunit-header'>scrappit.js core tests</h1>
+
+<h2 id='qunit-banner'></h2>
+
+<h2 id='qunit-userAgent'></h2>
+<ol id='qunit-tests'></ol>
+
+<script type='text/javascript' charset='utf-8'>
+var wait = 500;
+
+QUnit.module('scrappit setup and initialization');
+
+QUnit.test('scrappit should be globally accessible', function() {
+  ok(scrappit);
+});
+
+QUnit.test('scrappit should be a function', function() {
+  equal('function', typeof(scrappit));
+});
+
+QUnit.test('scrappit should return undefined', function() {
+  equal(undefined, scrappit({
+    launch: function(){ return 'anything'; }
+  }));
+});
+
+QUnit.test('scrappit.readyQueue should be an empty array', function() {
+  ok(scrappit.readyQueue.push);
+  ok(scrappit.readyQueue.length === 0);
+});
+
+QUnit.test('scrappit should execute and clear the readyQueue', function() {
+  expect(2);
+  stop(wait);
+
+  scrappit.readyQueue.push(function() {
+    ok(true)
+  });
+
+  load(function() {
+    setTimeout(function() {
+      ok(scrappit.readyQueue.length === 0);
+    }, 0);
+    start();
+  });
+});
+
+QUnit.test('scrappit should process functions in the readyQueue', function() {
+  expect(2);
+  stop(wait);
+
+  function f() { ok(true); }
+
+  scrappit.readyQueue = [f, f];
+
+  load(function() {
+    start();
+  });
+});
+
+QUnit.test('scrappit should export before readyQueue is processed', function() {
+  expect(1);
+  stop(wait);
+
+  scrappit.readyQueue.push(function() {
+    ok(global.scrappit);
+  });
+
+  load(function() {
+    start();
+  });
+});
+
+
+QUnit.test('scrappit should execute the readyQueue even if a running scrappit was detected', function() {
+  expect(1);
+  stop(wait);
+
+  scrappit.readyQueue.push(function() {
+    ok(true);
+  });
+
+  load(function() {
+    start();
+  });
+});
+
+QUnit.module('scrappit amd');
+
+QUnit.test('scrappit should not initialize with amd support when not present', function() {
+  ok(!global.require);
+  ok(!scrappit.amd);
+});
+
+QUnit.module('scrappit events');
+
+QUnit.test('scrappit should expose a publish and [un]subscribe', function() {
+  expect(1);
+  stop(wait);
+
+  var token = scrappit.subscribe("qunit", function() {
+    ok(true);
+    scrappit.unsubscribe(token);
+    scrappit.publish("qunit");
+    start();
+  });
+
+  scrappit.publish("qunit");
+});
+
+QUnit.test('scrappit should expose close method that fires a close event and passes scrappit', function() {
+  expect(2);
+  stop(wait);
+
+  var token = scrappit.subscribe("close", function(scrappit) {
+    ok(scrappit);
+    scrappit.unsubscribe(token);
+    load(function() {
+      ok(true);
+      scrappit.close();
+      load(function() {
+        start();
+      });
+    });
+  });
+
+  scrappit.close();
+});
+
+QUnit.module('scrapp execution');
+
+QUnit.test('should call the launch function of a scrapp', function() {
+  expect(1);
+
+  scrappit({
+    launch : function() {
+      ok(true);
+    }
+  });
+});
+
+QUnit.test('should assign a uid and deps_context', function() {
+  expect(2);
+
+  scrappit({
+    launch : function() {
+      ok(this._uid);
+      ok(this._deps_context);
+    }
+  });
+});
+
+QUnit.module('scrapp events');
+
+QUnit.test('scrapps should expose a publish and subscribe', function() {
+  expect(1);
+  stop(wait);
+
+  scrappit({
+    launch : function() {
+      this.subscribe("qunit", function() {
+        start();
+        ok(true);
+      });
+      this.publish("qunit");
+    }
+  });
+});
+
+QUnit.test('scrapp#close should publish a close event', function() {
+  expect(1);
+  stop(wait);
+
+  scrappit({
+    launch : function() {
+      this.subscribe("close", function() {
+        ok(true);
+        start();
+      });
+      this.close();
+    }
+  });
+});
+
+QUnit.test('scrapp#close should publish a scrappit close.scrapp event', function() {
+  expect(1);
+  stop(wait);
+
+  var token = scrappit.subscribe("close.scrapp", function(scrapp) {
+    scrappit.unsubscribe(token);
+    ok(scrapp);
+    start();
+  });
+
+  scrappit({
+    launch : function() {
+      this.close();
+    }
+  });
+});
+
+QUnit.test('scrapp#close should be fired when scrappit closes', function() {
+  stop(wait);
+  expect(1);
+
+  scrappit({
+    launch : function() {
+      this.subscribe("close", function() {
+        ok(true);
+        load(function() {
+          start();
+        });
+      });
+    }
+  });
+
+  scrappit.close();
+});
+
+
+QUnit.test('scrappit should publish the scrapp.beforeLaunch method before launch and scrapp.launch after', function() {
+  stop(wait);
+  expect(4);
+
+  var state = "preLaunch";
+  var scrapp = {
+    launch : function() {
+      state = "inLaunch";
+    }
+  };
+
+  var token1 = scrappit.subscribe("beforeLaunch.scrapp", function(theScrapp) {
+    equals(scrapp, theScrapp);
+    equals(state, "preLaunch");
+    scrappit.unsubscribe(token1);
+    start();
+  });
+
+  var token2 = scrappit.subscribe("launch.scrapp", function(theScrapp) {
+    equals(scrapp, theScrapp);
+    equals(state, "inLaunch");
+    scrappit.unsubscribe(token2);
+    start();
+  });
+
+  scrappit(scrapp);
+});
+
+</script>
+</body>
+</html>

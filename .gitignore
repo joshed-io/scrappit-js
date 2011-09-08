@@ -1,0 +1,17 @@
+.DS_Store
+log/*
+tmp/*
+db/schema.rb
+public/system
+public/system/*
+*~
+!.gitkeep
+.idea
+.idea/*
+spec/tmp/*
+public/cache
+vendor
+vendor/*
+tmp/restart.txt
+.bundle
+.bundle/*

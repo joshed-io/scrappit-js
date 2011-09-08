@@ -1,0 +1,17 @@
+{
+  "name": "scrappit",
+  "description": "Toward a web personalized by people",
+  "version": "0.1",
+  "authors": ["Josh Dzielak <josh@scrapp.it> (http://joshdzielak.com)"],
+  "keywords": ["extension", "chrome", "firefox", "safari", "userscript", "usercss",
+    "library", "framework", "requirejs", "module", "AMD"],
+  "main": "./scrappit.js",
+  "homepage": "http://scrappit.org",
+  "repository" : {
+    "type" : "git",
+    "url" : "git@github.com:dzello/scrappit-js.git"
+  },
+  "licenses" : [
+    { "type" : "MIT" }
+  ]
+}

@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv='Content-type' content='text/html; charset=utf-8'>
+  <title>scrappit.js amd tests</title>
+  <link rel='stylesheet' href='../vendor/qunit/qunit.css' type='text/css' charset='utf-8'>
+  <script src='../vendor/qunit/qunit.js' type='text/javascript' charset='utf-8'></script>
+  <script type='text/javascript' src='../scripts/lib/require.js'></script>
+
+  <script type='text/javascript'>
+    var global = this;
+
+    var scrappitPath = '../scripts/src/scrappit',
+        scrappitModuleName = 'scrappit';
+
+    function resetScrappitContext() {
+      delete(require.s.contexts._);
+      delete(require.s.contexts._);
+    }
+
+    function load(cb) {
+      resetScrappitContext();
+      require({paths : { scrappit : scrappitPath } }, [scrappitModuleName], cb);
+    }
+    function unload() {
+      global.scrappit.close();
+    }
+  </script>
+</head>
+<body>
+<h1 id='qunit-header'>scrappit.js not namespaced AMD tests</h1>
+
+<h2 id='qunit-banner'></h2>
+
+<h2 id='qunit-userAgent'></h2>
+<ol id='qunit-tests'></ol>
+
+<script type='text/javascript' charset='utf-8'>
+
+  load(function(scrappit) {
+
+    var wait = 500;
+    var deps = ["../test/scripts/one.js?_=" + new Date().getTime(),
+                "../test/scripts/two.js?_=" + new Date().getTime()];
+
+    QUnit.module('scrappit amd');
+
+    QUnit.test('scrappit should initialize with amd support when present', function() {
+      ok(scrappit.amd);
+    });
+
+    QUnit.test('scrappit should export with namespaced amd mirroring global amd', function() {
+      //even though amd is global, scrappit should always attempt
+      //to make these methods available on the scrappit namespace for
+      //api compatibility in all cases, so scrappit.define/require() will
+      //work whether or not amd is global or namespaced
+      equal(define, scrappit.define);
+      equal(require, scrappit.require);
+      equal(requirejs, scrappit.requirejs);
+    });
+
+    QUnit.module('scrappit setup and initialization');
+
+    QUnit.test('scrappit should allow requirejs config objects in the readyQueue', function() {
+      unload();
+
+      expect(1);
+      stop(wait);
+
+      //set this on global, like a script wanting to drop a ready queue and then load scrappit would
+      global.scrappit = {
+        readyQueue : [
+          {
+            ready : function() {
+              ok(true);
+            }
+          }
+        ]
+      };
+
+      load(function() {
+        start();
+      });
+    });
+
+    QUnit.module('scrappit amd');
+
+    QUnit.test('scrappit should initialize with amd support when present', function() {
+      ok(scrappit.amd);
+    });
+
+    QUnit.test('scrappit should export with namespaced amd', function() {
+      ok(scrappit.define);
+      ok(scrappit.require);
+      ok(scrappit.requirejs);
+    });
+
+    QUnit.module('scrappit amd context');
+
+    QUnit.test('scrappit should be defined as scrappit for a require, equal to global scrappit', function() {
+      scrappit.require(["scrappit"], function(scrappit) {
+        equal(scrappit, global.scrappit);
+      });
+    });
+
+    QUnit.test('scrappit should override an existing scrappit in the scrappit context', function() {
+      expect(2);
+      stop(wait);
+
+      var _uidC, _uidG = scrappit._uid;
+      scrappit.require(["scrappit"], function(scrappit) {
+        _uidC = scrappit._uid;
+      });
+
+      scrappit.close();
+
+      load(function() {
+        scrappit.require(["scrappit"], function(scrappit) {
+          notEqual(_uidC, scrappit._uid);
+          notEqual(_uidG, global.scrappit._uid);
+          start();
+        });
+      })
+    });
+
+    QUnit.module('scrapp dependency resolution');
+
+    QUnit.test('requireDeps should accept deps and callback', function() {
+      expect(2);
+      stop(wait);
+
+      scrappit({
+        launch : function() {
+          this.requireDeps(deps, function(one, two) {
+            start();
+            equals("one", one.one);
+            equals("two", two.two);
+          });
+        }
+      });
+    });
+
+    QUnit.test('requireDeps should accept config and deps', function() {
+      expect(1);
+      stop(wait);
+
+      scrappit({
+        launch : function() {
+          this.requireDeps({
+            callback : function() {
+              start();
+              ok(true);
+            }
+          });
+        }
+      });
+    });
+
+    QUnit.test('requireDeps should override the context in config', function() {
+      expect(3);
+      stop(wait);
+
+      scrappit({
+        launch : function() {
+          this.requireDeps({context : "bad"}, deps, function(one, two) {
+            start();
+            equals(scrappit.require.s.contexts.bad, undefined);
+            equals("one", one.one);
+            equals("two", two.two);
+          });
+        }
+      });
+    });
+
+    QUnit.module("scrapp require property shortcut");
+
+    QUnit.test('the require property shortcut allows arrays and curries results to launch', function() {
+      expect(2);
+      stop(wait);
+
+      scrappit({
+        require : deps,
+        launch : function(one, two) {
+          start();
+          equals("one", one.one);
+          equals("two", two.two);
+        }
+      });
+    });
+
+    QUnit.test('the require property shortcut allows objects', function() {
+      expect(2);
+      stop(wait);
+
+      scrappit({
+        require : { deps : deps },
+        launch : function(one, two) {
+          start();
+          equals("one", one.one);
+          equals("two", two.two);
+        }
+      });
+    });
+
+  });
+
+</script>
+</body>
+</html>
