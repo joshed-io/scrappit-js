@@ -2171,8 +2171,6 @@ scrappit.requirejs = requirejs;scrappit.require = require;scrappit.define = defi
       return runScrapp(scrapp);
     };
 
-    addPubSub(scrappit);
-
     //exported as scrappit() - this function takes a scrapp and runs it
     //a scrapp is an object that has at minimum a launch property
     function runScrapp(scrapp) {
@@ -2291,44 +2289,52 @@ scrappit.requirejs = requirejs;scrappit.require = require;scrappit.define = defi
       }
     }
 
-    scrappit._uid = guid();
+    function init() {
 
-    if (scrappit.amd = amd) {
-      //copy amd onto scrappit
-      scrappit.define = define;
-      scrappit.require = require;
-      scrappit.requirejs = requirejs;
+      //assign a uid
+      scrappit._uid = guid();
+
+      //add publish and subscribe
+      addPubSub(scrappit);
+
+      if (scrappit.amd = amd) {
+        //copy amd onto scrappit
+        scrappit.define = define;
+        scrappit.require = require;
+        scrappit.requirejs = requirejs;
+      }
+
+      //call to close scrappit and remove it,
+      //also closing anything listening on the close event
+      scrappit.close = function() {
+        //publish sync so global is available but also pass reference
+        //in case its not
+        scrappit.publish('close', scrappit);
+        //need to come after, cant share event handler
+        context[nsScrappit] = undef;
+      }
+
+      //scrappit.readyQueue should always be an array of callback/configuration
+      //objects intended to be run when scrappit is ready
+      //this allows scrappit to be included by more than once source without
+      //race conditions around callbacks & config objects
+      //
+      //the best practice in general for including scrappit on a page is:
+      //
+      //  var scrappit = this.scrappit || { readyQueue : [] };
+      //  scrappit.readyQueue.push({
+      //    ready : function() { //your scrappit callback here }
+      //  }
+      //
+      // -> now load scrappit.js
+      //
+      //multiple scrappits can coexist in this manner
+      scrappit.readyQueue = [];
     }
 
-    //call to close scrappit and remove it,
-    //also closing anything listening on the close event
-    scrappit.close = function() {
-      //publish sync so global is available but also pass reference
-      //in case its not
-      scrappit.publish('close', scrappit);
-      //need to come after, cant share event handler
-      context[nsScrappit] = undef;
-    }
-
-    //scrappit.readyQueue should always be an array of callback/configuration
-    //objects intended to be run when scrappit is ready
-    //this allows scrappit to be included by more than once source without
-    //race conditions around callbacks & config objects
-    //
-    //the best practice in general for including scrappit on a page is:
-    //
-    //  var scrappit = this.scrappit || { readyQueue : [] };
-    //  scrappit.readyQueue.push({
-    //    ready : function() { //your scrappit callback here }
-    //  }
-    //
-    // -> now load scrappit.js
-    //
-    //multiple scrappits can coexist in this manner
-    scrappit.readyQueue = [];
+    init();
 
     return scrappit;
-
   };
 
   function exportScrappit(scrappit) {
