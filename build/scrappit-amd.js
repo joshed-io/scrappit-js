@@ -2025,7 +2025,7 @@ scrappit.requirejs = requirejs;scrappit.require = require;scrappit.define = defi
 */
 (function(context, global, document) {
 
-  var version = "0.1.0",
+  var version = "0.1.0+",
 
       //scrappit's namespace as a module/global
       nsScrappit = 'scrappit',
