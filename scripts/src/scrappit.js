@@ -187,10 +187,22 @@
         }
       };
 
+      scrapp.applyArgsAndLaunch = function() {
+        //the default callback from module loading
+        //is to apply args to the launch function and
+        //then run onDependenciesReady
+        var args = arguments;
+        var oldScrappLaunch = scrapp.launch;
+        scrapp.launch = function() {
+          oldScrappLaunch.apply(scrapp, args);
+        };
+        scrapp.onDependenciesReady();
+      };
+
       //wrapper for when dependencies are ready
       scrapp.onDependenciesReady = function() {
         launchScrapp(scrapp);
-      }
+      };
 
       //closing a scrapp publishes a close message
       scrapp.close = function() {
@@ -226,19 +238,29 @@
     function provideAndLaunch(scrapp) {
       if (scrapp.require) {
         if (amd) {
-          var cfg = {}, deps = scrapp.require;
+
+          var cfg = {}, deps,
+              defaultCallback = scrapp.applyArgsAndLaunch;
+
+          //if a require js config object is used
           if (isObject(scrapp.require)) {
             cfg = scrapp.require;
-            deps = scrapp.require.deps;
+
+            //shortcut - don't supply a callback, and the
+            //default behavior of applying launch with the
+            //loaded modules will happen
+            //if you do supply a callback, make sure to
+            //eventually call onDependenciesReady to launch the scrapp
+            if (!cfg.callback) {
+              cfg.callback = defaultCallback;
+            }
+          } else {
+            //will be passed as array arg to require js
+            deps = scrapp.require;
           }
-          scrapp.requireDeps(cfg, deps, function() {
-            var args = arguments;
-            var oldScrappLaunch = scrapp.launch;
-            scrapp.launch = function() {
-              oldScrappLaunch.apply(scrapp, args);
-            };
-            scrapp.onDependenciesReady();
-          });
+
+          //call the scrapps require deps
+          scrapp.requireDeps(cfg, deps, defaultCallback);
         }
       } else {
         //no dependencies, launch

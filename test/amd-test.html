@@ -28,7 +28,7 @@
   </script>
 </head>
 <body>
-<h1 id='qunit-header'>scrappit.js not namespaced AMD tests</h1>
+<h1 id='qunit-header'>scrappit.js AMD tests</h1>
 
 <h2 id='qunit-banner'></h2>
 
@@ -198,6 +198,45 @@
           start();
           equals("one", one.one);
           equals("two", two.two);
+        }
+      });
+    });
+
+    QUnit.test('the require property shortcut uses callback in config object if supplied', function() {
+      expect(2);
+      stop(wait);
+
+      scrappit({
+        require : {
+          deps : deps,
+          callback : function(one, two) {
+            equals("one", one.one);
+            equals("two", two.two);
+            start();
+          }
+        },
+        launch : function(one, two) {
+          equal("fail", "FAIL");
+        }
+      });
+    });
+
+    QUnit.test('the callback in the require property shortcut can run the scrapp via apply args', function() {
+      expect(2);
+      stop(wait);
+
+      var scrapp;
+      scrappit(scrapp = {
+        require : {
+          deps : deps,
+          callback : function() {
+            scrapp.applyArgsAndLaunch.apply(scrapp, arguments);
+          }
+        },
+        launch : function(one, two) {
+          equals("one", one.one);
+          equals("two", two.two);
+          start();
         }
       });
     });
