@@ -69,12 +69,10 @@
 
       //set this on global, like a script wanting to drop a ready queue and then load scrappit would
       global.scrappit = {
-        readyQueue : [
-          {
-            ready : function() {
-              ok(true);
-            }
-          }
+        readyQueue : [{
+          callback : function() {
+            ok(true);
+          }}
         ]
       };
 

@@ -1,11 +1,10 @@
 {
-  "name": "scrappit-js",
-  "description": "Unique interfaces for unique visitors",
+  "name": "scrappit.js",
+  "description": "A simple container and lifecycle manager for scrapps",
   "version": "0.1.0",
   "authors": ["Josh Dzielak <josh@scrapp.it>"],
-  "keywords": ["web", "customize", "extension",
-    "chrome", "firefox", "safari", "userscript", "usercss",
-    "library", "framework", "requirejs", "module", "AMD"],
+  "keywords": ["scrappit", "scrapps", "userscripts", "userstyles",
+    "requirejs", "module", "AMD", "library", "microlib"],
   "main": "./build/scrappit.min.js",
   "homepage": "http://scrappit.org",
   "repository" : {
