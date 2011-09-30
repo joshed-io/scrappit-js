@@ -1,3 +1,3 @@
 var scrappit;(function () { if (typeof scrappit === 'undefined') {
     scrappit = {};
-  } if (!scrappit.define) {
+  } if (!(typeof scrappit.define === 'function' && scrappit.define.amd)) {
