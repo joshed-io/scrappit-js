@@ -61,6 +61,21 @@
     });
   });
 
+  QUnit.test('adding scrappit after scrappit-AMD without a namespace should still define the module', function() {
+    stop(wait);
+    expect(1);
+
+    //the point of this test is to say - 'if scrappit is already defined and
+    //has AMD, scrappit should still define itself so that the caller's require
+    //matched up with a define, and the scrappit object gets passed along
+    load('../scripts/lib/require.js', function() {
+      window.require(['../scripts/src/scrappit.js'], function(_scrappit) {
+        ok(_scrappit);
+        start();
+      });
+    });
+  });
+
   QUnit.module('existing scrappit on the page without amd');
 
   QUnit.test('adding scrappit-amd twice should not replace scrappit object but should add amd', function() {

@@ -319,13 +319,12 @@
 
   function addAmdToNamespace(ns) {
 
-    //if amd already present, ignore
+    //if AMD already present, ignore
     if (ns.define && ns.define.amd) {
       return;
     }
 
-    //try to apply amd.
-    //look first in context, then in ctxScrappit object
+    //look for AMD first in ctxScrappit object, then in context
     var amdSource;
     if (ctxScrappit && ctxScrappit.define && ctxScrappit.define.amd) {
       amdSource = ctxScrappit;
@@ -333,7 +332,7 @@
       amdSource = context;
     }
 
-    //if amdSource has amd, apply methods to namespace
+    //if amdSource has AMD, apply methods to namespace
     if (amdSource.define && amdSource.define.amd) {
       ns.define = amdSource.define;
       ns.require = amdSource.require;
@@ -360,15 +359,17 @@
 
   function _export(scrappit) {
     //export to global for consistency - whether AMD present or not
-    //scrappit is designed to occupy this namespace
+    //scrappit is designed to occupy this namespace, but
     //this library can added to a scope more than once w/o conflict
     context[nsScrappit] = scrappit;
+  }
 
-    //try catch is kludgy, but cannot check for 'typeof define'
+  function defineAmd(scrappit) {
+    //try/catch is kludgy, but cannot check for 'typeof define'
     //because define may be namespaced in someone's build
     try {
       //register scrappit module via define anonymous definition
-      //make sure you include via require and not just a script tag
+      //when using, make sure you include via require and not just a script tag
       //to avoid "Mismatched anonymous define module" error
       //even better - optimize with the require js optimizer, which
       //will assign the proper module name here (and namespace it)
@@ -384,15 +385,24 @@
     var scrappit,
         exported = isFunction(ctxScrappit);
 
+    //if scrappit already existed, we'll define and potentially
+    //export that one, else we'll unwrap a new one
     if (exported) {
       scrappit = ctxScrappit;
     } else {
       //get a new scrappit
-      scrappit = scrappitWrapper(); //unwrap it
+      scrappit = scrappitWrapper();
     }
 
-    //add amd if available and export
+    //add AMD if available
     addAmdToNamespace(scrappit);
+
+    //even if scrappit and require already exported, unless
+    //we define here, the immediate caller will not get scrappit
+    //defined when they require it
+    defineAmd(scrappit);
+
+    //export to global
     if (!exported) {
       _export(scrappit);
     }
