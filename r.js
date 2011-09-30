@@ -1,5 +1,5 @@
 /**
- * @license r.js 0.26.0+ Copyright (c) 2010-2011, The Dojo Foundation All Rights Reserved.
+ * @license r.js 0.26.0+ 20110930 1:35pm Pacific Copyright (c) 2010-2011, The Dojo Foundation All Rights Reserved.
  * Available via the MIT or new BSD license.
  * see: http://github.com/jrburke/requirejs for details
  */
@@ -20,7 +20,7 @@ var requirejs, require, define;
 
     var fileName, env, fs, vm, path, exec, rhinoContext, dir, nodeRequire,
         nodeDefine, exists, reqMain, loadedOptimizedLib,
-        version = '0.26.0+',
+        version = '0.26.0+ 20110930 1:35pm Pacific',
         jsSuffixRegExp = /\.js$/,
         commandOption = '',
         //Used by jslib/rhino/args.js
@@ -6715,6 +6715,7 @@ define('pragma', ['parse', 'logger'], function (parse, logger) {
         nsRegExp: /(^|[^\.])(requirejs|require|define)\s*\(/,
         nsWrapRegExp: /\/\*requirejs namespace: true \*\//,
         apiDefRegExp: /var requirejs, require, define;/,
+        defineCheckRegExp: /typeof\s+define\s*===\s*["']function["']\s*&&\s*define\s*\.\s*amd/g,
 
         removeStrict: function (contents, config) {
             return config.useStrict ? contents : contents.replace(pragma.useStrictRegExp, '');
@@ -6724,6 +6725,10 @@ define('pragma', ['parse', 'logger'], function (parse, logger) {
             if (ns) {
                 //Namespace require/define calls
                 fileContents = fileContents.replace(pragma.nsRegExp, '$1' + ns + '.$2(');
+
+                //Namespace define checks.
+                fileContents = fileContents.replace(pragma.defineCheckRegExp,
+                                                    "typeof " + ns + ".define === 'function' && " + ns + ".define.amd");
 
                 //Check for require.js with the require/define definitions
                 if (pragma.apiDefRegExp.test(fileContents) &&

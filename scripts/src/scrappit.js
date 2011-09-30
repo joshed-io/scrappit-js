@@ -365,18 +365,17 @@
   }
 
   function defineAmd(scrappit) {
-    //try/catch is kludgy, but cannot check for 'typeof define'
-    //because define may be namespaced in someone's build
-    try {
-      //register scrappit module via define anonymous definition
-      //when using, make sure you include via require and not just a script tag
-      //to avoid "Mismatched anonymous define module" error
-      //even better - optimize with the require js optimizer, which
-      //will assign the proper module name here (and namespace it)
+    //register scrappit module via define anonymous definition
+    //if you're using AMD< make sure you include scrappit with require
+    //and not a script tag to avoid "Mismatched anonymous define module" error
+    //even better - include scrappit in your build with the require js optimizer,
+    // which will assign the proper module names and namespaces here
+    //see: http://groups.google.com/group/requirejs/browse_thread/thread/bbb0a9c9b028a0ac
+    if (typeof define === 'function' && define.amd) {
       define(function() {
         return scrappit;
       });
-    } catch (e) {}
+    }
   }
 
   function init() {
