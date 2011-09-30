@@ -118,7 +118,7 @@ QUnit.module('scrappit amd');
 
 QUnit.test('scrappit should not initialize with amd support when not present', function() {
   ok(!global.require);
-  ok(!scrappit.amd);
+  ok(!scrappit.define);
 });
 
 QUnit.module('scrappit events');

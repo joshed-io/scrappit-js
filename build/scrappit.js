@@ -8,22 +8,22 @@
 
   var version = "0.1.0+",
 
-      //scrappit's namespace as a module/global
+      //scrappit's global namespace
       nsScrappit = 'scrappit',
 
-      //existing scrappit in context
-      ctxScrappit = context[nsScrappit],
-
-      //a queue placed in advance to run once scrappit is initialized
-      readyQueue = ctxScrappit && ctxScrappit.readyQueue,
-      amd,
       guidCt = 0,
 
       //optimize minification
       undef = undefined,
       strUndef = '' + undef,
       toString = Object.prototype.toString,
-      console = global.console;
+      console = global.console,
+
+      //existing scrappit in scope or in context
+      ctxScrappit = context[nsScrappit],
+
+      //a queue placed in advance to run once scrappit is initialized
+      readyQueue = ctxScrappit && ctxScrappit.readyQueue;
 
   //common helper functions
   function isFunction(obj) {
@@ -126,33 +126,16 @@
     }
   })();
 
-  //is ctxScrappit has amd on it, prefer that instead
-  //while it'd be nice to try and default to require/define
-  //in context, its probably not safe yet, and scrappit's
-  //namespaced amd is totally predictable when bundled with requirejs
-  var amdSource;
-  if (ctxScrappit && ctxScrappit.define && ctxScrappit.define.amd) {
-    amdSource = ctxScrappit;
-  } else {
-    amdSource = context;
-  }
-
-  var define = amdSource.define,
-      require = amdSource.require,
-      requirejs = amdSource.requirejs,
-      amd = define && define.amd;
-
-  //setup scrappit internally
   //this is wrapped because it might not need to be executed
   //if scrappit is already present as a function (see below)
-  var scrappit = function() {
+  var scrappitWrapper = function() {
 
-    //wrap for module definition
+    //setup internal scrappit
     var scrappit = function(scrapp) {
       return runScrapp(scrapp);
     };
 
-    //exported as scrappit() - this function takes a scrapp and runs it
+    //exported as scrappit - this function takes a scrapp and runs it
     //a scrapp is an object that has at minimum a launch property
     function runScrapp(scrapp) {
       //mixin some framework to the provided scrapp object
@@ -174,7 +157,7 @@
       //setup a requireDeps method that'll have a unique context applied,
       //such that requires by this scrapp dont interfere with scrappit or other contexts
       scrapp.requireDeps = function(cfg, deps, callback) {
-        if (amd) {
+        if (scrappit.define) {
           var depsContext = scrapp._deps_context;
           if (isObject(cfg)) {
             cfg.context = depsContext;
@@ -183,7 +166,7 @@
           }
           cfg.context = depsContext;
 
-          require(cfg, deps, callback);
+          scrappit.require(cfg, deps, callback);
         }
       };
 
@@ -237,7 +220,8 @@
     //the result of the define will be curried to the launch method
     function provideAndLaunch(scrapp) {
       if (scrapp.require) {
-        if (amd) {
+
+        if (scrappit.define) {
 
           var cfg = {}, deps,
               defaultCallback = scrapp.applyArgsAndLaunch;
@@ -300,13 +284,6 @@
       //add publish and subscribe
       addPubSub(scrappit);
 
-      if (scrappit.amd = amd) {
-        //copy amd onto scrappit
-        scrappit.define = define;
-        scrappit.require = require;
-        scrappit.requirejs = requirejs;
-      }
-
       //call to close scrappit and remove it,
       //also closing anything listening on the close event
       scrappit.close = function() {
@@ -340,11 +317,31 @@
     return scrappit;
   };
 
-  function exportScrappit(scrappit) {
-    context[nsScrappit] = scrappit;
+  function addAmdToNamespace(ns) {
+
+    //if amd already present, ignore
+    if (ns.define && ns.define.amd) {
+      return;
+    }
+
+    //try to apply amd.
+    //look first in context, then in ctxScrappit object
+    var amdSource;
+    if (ctxScrappit && ctxScrappit.define && ctxScrappit.define.amd) {
+      amdSource = ctxScrappit;
+    } else {
+      amdSource = context;
+    }
+
+    //if amdSource has amd, apply methods to namespace
+    if (amdSource.define && amdSource.define.amd) {
+      ns.define = amdSource.define;
+      ns.require = amdSource.require;
+      ns.requirejs = amdSource.requirejs;
+    }
   }
 
-  function processReadyQueue() {
+  function processReadyQueue(scrappit) {
     //process and reset the ready queue
     if (readyQueue) {
       for (var i = 0; i < readyQueue.length; i++) {
@@ -352,8 +349,8 @@
         if (isFunction(readyItem)) {
           readyItem();
         } else if (isObject(readyItem)) {
-          if (amd) {
-            require(readyItem);
+          if (scrappit.define) {
+            scrappit.require(readyItem);
           }
         }
       }
@@ -361,26 +358,43 @@
     }
   }
 
+  function _export(scrappit) {
+    //export to global for consistency - whether AMD present or not
+    //scrappit is designed to occupy this namespace
+    //this library can added to a scope more than once w/o conflict
+    context[nsScrappit] = scrappit;
+
+    //try catch is kludgy, but cannot check for 'typeof define'
+    //because define may be namespaced in someone's build
+    try {
+      //register scrappit module via define anonymous definition
+      //make sure you include via require and not just a script tag
+      //to avoid "Mismatched anonymous define module" error
+      //even better - optimize with the require js optimizer, which
+      //will assign the proper module name here (and namespace it)
+      define(function() {
+        return scrappit;
+      });
+    } catch (e) {}
+  }
+
   function init() {
-    //only initialize and export if not already on the page
-    if (!isFunction(ctxScrappit)) {
 
-      scrappit = scrappit(); //unwrap it
+    //will hold the unwrapped value from above
+    var scrappit,
+        exported = isFunction(ctxScrappit);
 
-      //export to global for consistency - whether AMD in play or
-      //not, scrappit as a func is base for a predictable namespace
-      exportScrappit(scrappit);
+    if (exported) {
+      scrappit = ctxScrappit;
+    } else {
+      //get a new scrappit
+      scrappit = scrappitWrapper(); //unwrap it
+    }
 
-      if (scrappit.amd) {
-        //register scrappit module via define anonymous definition
-        //make sure you include via require and not just a script tag
-        //to avoid "Mismatched anonymous define module" error
-        //even better - optimize with the require js optimizer, which
-        //will assign the proper module name here
-        define(function() {
-          return scrappit;
-        });
-      }
+    //add amd if available and export
+    addAmdToNamespace(scrappit);
+    if (!exported) {
+      _export(scrappit);
     }
 
     //run the ready queue, even if scrappit was present
@@ -389,7 +403,9 @@
     //set in timeout so that require js processes the define call above
     //before the ready queue - stuff in ready queue can cause scrappit
     //to be required outside of the root context and break other code
-    setTimeout(processReadyQueue, 0);
+    setTimeout(function() {
+      processReadyQueue(scrappit);
+    }, 0);
   }
 
   init();

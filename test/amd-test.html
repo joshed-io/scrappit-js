@@ -46,7 +46,7 @@
     QUnit.module('scrappit amd');
 
     QUnit.test('scrappit should initialize with amd support when present', function() {
-      ok(scrappit.amd);
+      ok(scrappit.define);
     });
 
     QUnit.test('scrappit should export with namespaced amd mirroring global amd', function() {
@@ -78,26 +78,6 @@
 
       load(function() {
         start();
-      });
-    });
-
-    QUnit.module('scrappit amd');
-
-    QUnit.test('scrappit should initialize with amd support when present', function() {
-      ok(scrappit.amd);
-    });
-
-    QUnit.test('scrappit should export with namespaced amd', function() {
-      ok(scrappit.define);
-      ok(scrappit.require);
-      ok(scrappit.requirejs);
-    });
-
-    QUnit.module('scrappit amd context');
-
-    QUnit.test('scrappit should be defined as scrappit for a require, equal to global scrappit', function() {
-      scrappit.require(["scrappit"], function(scrappit) {
-        equal(scrappit, global.scrappit);
       });
     });
 
