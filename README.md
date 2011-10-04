@@ -46,7 +46,7 @@ Let's Jump In
           }
          }
 
-    \(Note that the file you're requiring must define itself as a module for this to work. [http://scrappit.org/code](http://scrappit.org/code) maintains a collection of libraries having AMD support.\)
+    \(Note that the file you're requiring must define itself as a module for this to work. [scrappit.org/code](http://scrappit.org/code) maintains a collection of AMD-compatible libraries and ports.\)
 
 *   Here's another example scrapp for some extra credit. This scrapp exposes each external link on a page in just a few lines of code.
 
