@@ -62,7 +62,7 @@ In this way, scrapps are kinda like userscripts, bookmarklets, or extensions. An
 
 Downloads
 ---------
-**Bundled and namespaced with require.js**
+**Bundled with require.js**
 
 *   **build/scrappit-amd.min.js** - 18K min+gzip - includes scrappit.js and require.js, all namespaced onto `scrappit` (predictable, no global scope impact). Use this bundle's AMD methods like this:
 
@@ -72,16 +72,16 @@ Downloads
 **Standalone**
 
 *   **build/scrappit.min.js** - 1.2K min+gzip - Production standalone version
-*   **build/scrappit.js** - Uncompressed version of scrappit.js with lots of comments
+*   **build/scrappit.js** - Uncompressed version of scrappit.js with lots of comments. Add it to your project's AMD build.
 
 
 Because the use and meaning of `define` and `require` across the web is not universal, it's
 a much safer to use the bundled version if you're going to run scrappit.js on pages you don't control.
-This places the `define` and `require` AMD methods onto the `scrappit` namespace and prevents global leakage.
+This places the `define` and `require` AMD methods onto the `scrappit` namespace and prevents conflicts with existing global variables.
 
-The standalone versions are great if you already have require.js or another AMD loader in your project. Note that
+The standalone version is appropriate if you already have require.js or another AMD loader in your project. Note that
 the `define` calls in the standalone version are anonymous, meaning that scrappit.js is ready to include into
-your build (e.g. the require.js optimizer), or to `require` onto your page. (And it also means you should
+your build (e.g. the require.js optimizer), or to `require` onto your page. (This also means you should
 **not** include it as a script tag after your require.js script tag. This will cause a require.js error - Anonymous module definition.)
 
 Tests
