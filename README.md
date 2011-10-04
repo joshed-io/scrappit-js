@@ -5,12 +5,12 @@ scrappit.js (1.2K)
 
 Scrapps are self-contained JavaScript programs that execute within existing web pages (or any JS runtime for that matter). They are used to build and modify interfaces - including the interface at [http://scrappit.org](http://scrappit.org).
 
-In this way, scrapps are kinda like userscripts, bookmarklets, or extensions. And sometimes the goal is similar - to *add custom awesome to web sites*.
+In this way, scrapps are kinda like userscripts, bookmarklets, or extensions. And sometimes the goal is similar - to customize user interfaces.
 
 **However, there are a few key differences between scrappit.js and existing technologies:**
 
 *   scrappit.js does not depend on any browser or extension-specific API's - it's 100% vanilla JavaScript.
-*   scrappit.js acknowledges and orchestrates the running of many scrapps on a page at a time. This allows you to run many different scrapps on each page while maintaining stability.
+*   scrappit.js orchestrates the running of many scrapps on a page at a time, keeping containment and stability.
 *   Scrapps are plain old JavaScript objects. Scrapps express metadata and behaviors via their properties.
 
         var myScrapp = { name: "Unicorn List Bullets", launch : function() { ... } }
@@ -23,29 +23,31 @@ In this way, scrapps are kinda like userscripts, bookmarklets, or extensions. An
           }
         }
 
-*   Each scrapp is equipped with publish and subscribe methods. This lets them interact predictably with scrappit.js, other scrapps, and scrappit.js plugins in that loosely coupled way.
+*   Each scrapp is equipped with publish and subscribe methods. This lets them interact predictably with scrappit.js, other scrapps, and scrappit.js plugins in a loosely coupled manner.
 
 
-*   scrappit.js itself is event based - this makes writing event-based plugins trivial:
+*   scrappit.js itself is event based - this makes writing event-based plugins easy:
 
         scrappit.subscribe('launch.scrapp', function(scrapp) {
           console.debug("The " + scrapp.name + " scrapp has launched!");
         }
 
-*   Scrapps can require dependencies without impacting the underlying page (no-conflict) using a very simple require.js compatible syntax.
+*   Scrapps help you load conflict-free dependencies using the AMD (asynchronous module definition) pattern.
 
         var myScrapp = {
-          require : ["http://scrappit.org/libs/modules/jquery-amd.js"],
+          require : ["http://scrappit.org/app-build/scripts/libs/jquery-amd.js"],
           launch : function($) {
             $("h1").html("i haz a jqueris!");
           }
          }
 
-    Extra credit:
+    Note that the file you're requiring must define itself as a module for this to work.
+
+*   Here's another example for extra credit:
 
         var myScrapp = {
           require : {
-            baseUrl : "http://scrappit.org/libs/modules",
+            baseUrl : "http://scrappit.org/app-build/scripts/libs",
             deps: ["jquery-amd.js", "sideburn.js", "mustache.js"]
           },
           launch : function($, sideburn, mustache) {
@@ -54,10 +56,9 @@ In this way, scrapps are kinda like userscripts, bookmarklets, or extensions. An
               item.html(
                 mustache.to_html(
                   sideburn(item[0]), "<a href='{{href}}' style='color: orange;'>{{text}}</a>"))
-            }
+            });
           }
-         }
-
+        }
 
 Downloads
 ---------
