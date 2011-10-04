@@ -1,17 +1,29 @@
 scrappit.js (1.2K)
 ==================
 
-> A simple container and lifecycle manager for scrapps.
+> A boilerplate for interface customization
 
-Scrapps are self-contained JavaScript programs that execute within existing web pages (or any JS runtime for that matter). They are used to build and modify interfaces - including the interface at [http://scrappit.org](http://scrappit.org).
+scrappit.js is a lifecycle manager, dependency manager and runtime environment for scrapps.
 
-In this way, scrapps are kinda like userscripts, bookmarklets, or extensions. And sometimes the goal is similar - to customize user interfaces.
+Scrapps are self-contained JavaScript programs that execute within existing JavaScript environments (i.e. web pages). Often, they are used to create or modify user interfaces. Check out [http://scrappit.org](http://scrappit.org) for an example.
 
-**However, there are a few key differences between scrappit.js and existing technologies:**
+In this way, scrapps are similar to userscripts, bookmarklets, and extensions. If you like those things, you'll love this scrapp thing.
 
-*   scrappit.js does not depend on any browser or extension-specific API's - it's 100% vanilla JavaScript.
-*   scrappit.js orchestrates the running of many scrapps on a page at a time, keeping containment and stability.
-*   Scrapps are plain old JavaScript objects. Scrapps express metadata and behaviors via their properties.
+Let's Jump In
+-------------
+**What you need to know about scrappit.js:**
+
+*   scrappit.js is 100% vanilla JavaScript, just like Mom used to make. It works everywhere. It doesn't depend on browser or extension-specific API's.
+*   scrappit.js is an on-page application runtime, and scrapps are the apps. Any number of scrapps can run simultaneously - with awareness and without conflict.
+*   Communication with scrappit.js is event based (read: *easy*). Write plugins and subscribe to events like so:
+
+        scrappit.subscribe('launch.scrapp', function(scrapp) {
+          console.debug("The " + scrapp.name + " scrapp has launched!");
+        }
+
+**Here's what scrapps are like:**
+
+*   Scrapps themselves are just plain old JavaScript objects. Scrapps express metadata and behaviors via their properties.
 
         var myScrapp = { name: "Unicorn List Bullets", launch : function() { ... } }
 
@@ -23,27 +35,20 @@ In this way, scrapps are kinda like userscripts, bookmarklets, or extensions. An
           }
         }
 
-*   Each scrapp is equipped with publish and subscribe methods. This lets them interact predictably with scrappit.js, other scrapps, and scrappit.js plugins in a loosely coupled manner.
+*   Like scrappit.js, scrapps use a simple publish and subscribe model to interact with scrappit.js, other scrapps, and scrappit.js plugins.
 
-
-*   scrappit.js itself is event based - this makes writing event-based plugins easy:
-
-        scrappit.subscribe('launch.scrapp', function(scrapp) {
-          console.debug("The " + scrapp.name + " scrapp has launched!");
-        }
-
-*   Scrapps help you load conflict-free dependencies using the AMD (asynchronous module definition) pattern.
+*   scrappit.js loads dependencies for each scrapp using the AMD (asynchronous module definition) pattern. Declare dependencies as a simple array or config object, and receive them as simple function arguments.
 
         var myScrapp = {
           require : ["http://scrappit.org/app-build/scripts/libs/jquery-amd.js"],
           launch : function($) {
-            $("h1").html("i haz a jqueris!");
+            $("h1").html("wuz my jqueries");
           }
          }
 
-    Note that the file you're requiring must define itself as a module for this to work.
+    \(Note that the file you're requiring must define itself as a module for this to work. [http://scrappit.org/code](http://scrappit.org/code) maintains a collection of libraries having AMD support.\)
 
-*   Here's another example for extra credit:
+*   Here's another example scrapp for some extra credit. This scrapp exposes each external link on a page in just a few lines of code.
 
         var myScrapp = {
           require : {
@@ -62,17 +67,17 @@ In this way, scrapps are kinda like userscripts, bookmarklets, or extensions. An
 
 Downloads
 ---------
-**Bundled with require.js**
+**With AMD support provided by require.js**
 
-*   **build/scrappit-amd.min.js** - 18K min+gzip - includes scrappit.js and require.js, all namespaced onto `scrappit` (predictable, no global scope impact). Use this bundle's AMD methods like this:
+*   **build/scrappit-amd.min.js** - 6.7K min+gzip - includes scrappit.js and require.js, all namespaced onto `scrappit` (predictable, no global scope impact). Any dependencies you load must register via `scrappit.define(...)` as follows:
 
         scrappit.define({ my : 'module'});
-        scrappit.require(['module'], function(module) { ... });
+        scrappit.require(['module'], function(module) { ... }); //the code that requires it
 
 **Standalone**
 
+*   **build/scrappit.js** - Uncompressed version of scrappit.js with lots of comments and no bundled AMD. Add it to your project's AMD-compatible build.
 *   **build/scrappit.min.js** - 1.2K min+gzip - Production standalone version
-*   **build/scrappit.js** - Uncompressed version of scrappit.js with lots of comments. Add it to your project's AMD build.
 
 
 Because the use and meaning of `define` and `require` across the web is not universal, it's
