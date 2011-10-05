@@ -52,15 +52,15 @@ Let's Jump In
 
         var myScrapp = {
           require : {
-            baseUrl : "http://scrappit.org/app-build/scripts/libs",
-            deps: ["jquery-amd.js", "sideburn.js", "mustache.js"]
+            baseUrl : "//s3.amazonaws.com/o.scrappz.com/app-build/scripts/libs",
+            deps: ["jquery-amd", "sideburn", "mustache"]
           },
           launch : function($, sideburn, mustache) {
-            //strip attributes from non-relative links and color them orange
             $.each($("a[href^=http]"), function(index, item) {
-              item.html(
+              $(this).html(
                 mustache.to_html(
-                  sideburn(item[0]), "<a href='{{href}}' style='color: orange;'>{{text}}</a>"))
+                    "<a href='{{href}}' style='color: orange;'>{{text}}</a>",
+                    sideburn(item)));
             });
           }
         }
