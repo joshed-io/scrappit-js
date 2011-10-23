@@ -6,12 +6,12 @@
   <title>scrappit.js namespaced amd tests</title>
   <link rel='stylesheet' href='../vendor/qunit/qunit.css' type='text/css' charset='utf-8'>
   <script src='../vendor/qunit/qunit.js' type='text/javascript' charset='utf-8'></script>
-  <script type='text/javascript' src='../build/scrappit-amd.js'></script>
+  <script type='text/javascript' src='lib-namespaced-amd-build/scripts/scrappit-amd-test.js'></script>
   <script type='text/javascript'>
     function load(url, cb) {
       if (typeof(url) !== "string") {
         cb = url;
-        url = "../build/scrappit-amd.js";
+        url = "lib-namespaced-amd-build/scripts/scrappit-amd-test.js";
       }
 
       (function(g,b,d){var c=b.head||b.getElementsByTagName("head"),D="readyState",E="onreadystatechange",F="DOMContentLoaded",G="addEventListener",H=setTimeout;
@@ -30,7 +30,16 @@
 <ol id='qunit-tests'></ol>
 
 <script type='text/javascript' charset='utf-8'>
-  var wait = 500;
+  var scrappit, wait = 500;
+  function deps() {
+    return [
+      "lib-namespaced-amd-build/scripts/one.js?" + new Date().getTime(),
+      "lib-namespaced-amd-build/scripts/two.js?" + new Date().getTime()];
+  }
+
+  scrappitTestSuite.require(['scrappit'], function(_scrappit) {
+    scrappit = _scrappit;
+  });
 
   function ensureNoGlobalAmd() {
     equal(typeof define, "undefined");
@@ -38,63 +47,32 @@
     equal(typeof requirejs, "undefined");
   }
 
-  QUnit.module('nothing on the page');
+  QUnit.module('namespaced amd');
 
   QUnit.test('scrappit should export with namespaced amd and no global amd', function() {
     ensureNoGlobalAmd();
-    ok(scrappit.define);
-    ok(scrappit.require);
-    ok(scrappit.requirejs);
+    equal(typeof scrappitTestSuite.define, "function");
+    equal(typeof scrappitTestSuite.require, "function");
+    equal(typeof scrappitTestSuite.requirejs, "function");
   });
 
-  QUnit.module('existing scrappit on the page with amd');
+  QUnit.module('scrapp dependency resolution');
 
-  QUnit.test('adding scrappit-amd twice should not replace scrappit nor amd', function() {
-    stop(wait);
+  QUnit.test('scrapps should be able to require and define modules via the namespace', function() {
     expect(2);
-    var oldScrappit = scrappit,
-        oldDefine = scrappit.define;
-    load(function() {
-      equal(scrappit, oldScrappit);
-      equal(scrappit.define, oldDefine);
-      start();
-    });
-  });
-
-  QUnit.test('adding scrappit after scrappit-AMD without a namespace should still define the module', function() {
     stop(wait);
-    expect(1);
 
-    //the point of this test is to say - 'if scrappit is already defined and
-    //has AMD, scrappit should still define itself so that the caller's require
-    //matched up with a define, and the scrappit object gets passed along
-    load('../scripts/lib/require.js', function() {
-      window.require(['../scripts/src/scrappit.js'], function(_scrappit) {
-        ok(_scrappit);
-        start();
-      });
+    scrappit({
+      launch : function() {
+        this.requireDeps(deps(), function(one, two) {
+          equals("one", one.one);
+          equals("two", two.two);
+          start();
+        });
+      }
     });
   });
 
-  QUnit.module('existing scrappit on the page without amd');
-
-  QUnit.test('adding scrappit-amd twice should not replace scrappit object but should add amd', function() {
-    delete(scrappit.define);
-    delete(scrappit.require);
-    delete(scrappit.requirejs);
-
-    stop(wait);
-    expect(4);
-
-    var oldScrappit = scrappit;
-    load(function() {
-      equal(scrappit, oldScrappit);
-      ok(scrappit.define);
-      ok(scrappit.require);
-      ok(scrappit.requirejs);
-      start();
-    });
-  });
 
 </script>
 </body>
