@@ -1,4 +1,3 @@
-
 /*
  scrappit.js
  http://scrappit.org
@@ -300,7 +299,7 @@
     var scrappit = scrappitFactory();
 
     if (typeof define === 'function' && define.amd) {
-      define('scrappit',[],function() {
+      define(function() {
         return scrappit;
       });
     } else {

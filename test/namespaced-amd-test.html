@@ -32,9 +32,10 @@
 <script type='text/javascript' charset='utf-8'>
   var scrappit, wait = 500;
   function deps() {
+    //fully qualified because context doesn't switch over...
     return [
-      "lib-namespaced-amd-build/scripts/one.js?" + new Date().getTime(),
-      "lib-namespaced-amd-build/scripts/two.js?" + new Date().getTime()];
+      "lib-namespaced-amd-build/scripts/one.js",
+      "lib-namespaced-amd-build/scripts/two.js"];
   }
 
   scrappitTestSuite.require(['scrappit'], function(_scrappit) {
