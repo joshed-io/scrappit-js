@@ -7,27 +7,27 @@ scrappit.js is a lifecycle manager, dependency manager and runtime environment f
 
 Scrapps are self-contained JavaScript programs that execute within existing JavaScript environments (i.e. web pages). Often, they are used to create or modify user interfaces. Check out [http://scrappit.org](http://scrappit.org) for an example.
 
-In this way, scrapps are similar to userscripts, bookmarklets, and extensions. If you like those things, you'll love this scrapp thing.
+In this way, scrapps are similar to userscripts, bookmarklets, and extensions. If you like those things, you'll love this thing.
 
-Let's Jump In
+Usage
 -------------
 **What you need to know about scrappit.js:**
 
 *   scrappit.js is 100% vanilla JavaScript, just like Mom used to make. It works everywhere. It doesn't depend on browser or extension-specific API's.
-*   scrappit.js is an on-page application runtime, and scrapps are the apps. Any number of scrapps can run simultaneously - with awareness and without conflict.
-*   Communication with scrappit.js is event based (read: *easy*). Write plugins and subscribe to events like so:
+*   scrappit.js is an on-page application runtime, and scrapps are the apps. Any number of scrapps can run simultaneously without conflict - even among dependencies (some assembly required).
+*   Communication with scrappit.js is event based. Subscribe to events like so:
 
         scrappit.subscribe('launch.scrapp', function(scrapp) {
           console.debug("The " + scrapp.name + " scrapp has launched!");
-        }
+        })
 
 **Here's what scrapps are like:**
 
-*   Scrapps themselves are just plain old JavaScript objects. Scrapps express metadata and behaviors via their properties.
+*   Scrapps are just plain old JavaScript objects. Scrapps express metadata and behaviors via their properties.
 
         var myScrapp = { name: "Unicorn List Bullets", launch : function() { ... } }
 
-*   Scrapps have a lifecycle. It starts with a call to `myScrapp.launch()`. It ends when scrappit.js publishes a `close` event to the scrapp. The scrapp, having subscribed to this event, should gracefully remove its impact from the page when it receives it.
+*   Scrapps have a lifecycle. It starts when scrappit.js calls `myScrapp.launch()`. It ends when scrappit.js publishes a `close` event to the scrapp. The scrapp, having subscribed to this event, should gracefully remove its impact from the page when it receives it.
 
         var myScrapp = { ..., launch : function($) {
             $("ul").ULnicorn();
@@ -35,20 +35,21 @@ Let's Jump In
           }
         }
 
-*   Like scrappit.js, scrapps use a simple publish and subscribe model to interact with scrappit.js, other scrapps, and scrappit.js plugins.
+*   Scrapps also use a simple publish and subscribe model to interact with scrappit.js and scrappit.js plugins.
 
-*   scrappit.js loads dependencies for each scrapp using the AMD (asynchronous module definition) pattern. Declare dependencies as a simple array or config object, and receive them as simple function arguments.
+*   scrappit.js loads dependencies for each scrapp using the AMD (asynchronous module definition) pattern. Declare dependencies as a simple array or (require.js compatible) config object, and receive them as simple function arguments.
 
         var myScrapp = {
           require : ["http://scrappit.org/app-build/scripts/libs/jquery-amd.js"],
           launch : function($) {
-            $("h1").html("wuz my jqueries");
+            $("h1").html("wuz by jqueries");
           }
          }
 
-    \(Note that the file you're requiring must define itself as a module for this to work. [scrappit.org/code](http://scrappit.org/code) maintains a collection of AMD-compatible libraries and ports.\)
+    AMD API methods (`require`/`define`) must be available when scrappit is loaded for `require` support to be available.
+    The files you require, e.g. jQuery, must also use `define` when available. [scrappit.org/code](http://scrappit.org/code) maintains a collection of AMD-compatible libraries and ports.
 
-*   Here's another example scrapp for some extra credit. This scrapp exposes each external link on a page in just a few lines of code.
+*   Here's another example scrapp for some extra credit. This scrapp exposes each external link on a page in just a few lines of code. It illustrates the use of dependencies.
 
         var myScrapp = {
           require : {
@@ -67,37 +68,49 @@ Let's Jump In
 
 Downloads
 ---------
-**With AMD support provided by require.js**
+Here's all you need to get started:
 
-*   **build/scrappit-amd.min.js** - 6.7K min+gzip - includes scrappit.js and require.js, all namespaced onto `scrappit` (predictable, no global scope impact). Any dependencies you load must register via `scrappit.define(...)` as follows:
+*   **lib-build/scrappit.js** Uncompressed version of scrappit.js with lots of comments. Add it to your project's AMD-compatible build process or use it in development.
+*   **lib-build/scrappit.min.js** - 1.2K min+gzip - production version. If you're not using a build process, you can use this version to run in your production environment.
 
-        scrappit.define({ my : 'module'});
-        scrappit.require(['module'], function(module) { ... }); //the code that requires it
+Running
+-------
+Once you have scrappit.js downloaded and copied into your project, here's how to run it:
 
-**Standalone**
+    require(['scrappit'], function(scrappit) {
+      scrappit({
+        // ... scrapp methods go here ...
+      });
+    });
 
-*   **build/scrappit.js** - Uncompressed version of scrappit.js with lots of comments and no bundled AMD. Add it to your project's AMD-compatible build.
-*   **build/scrappit.min.js** - 1.2K min+gzip - Production standalone version
+scrappit.js will register via `define` if it's available. If not, it will add itself as to global as `scrappit` and you can use it like this:
 
+    <script type="text/javascript" src="scrappit.js"></script>
+    <script type="text/javascript">
+      scrappit({ ... });
+    </script>
 
-Because the use and meaning of `define` and `require` across the web is not universal, it's
-a much safer to use the bundled version if you're going to run scrappit.js on pages you don't control.
-This places the `define` and `require` AMD methods onto the `scrappit` namespace and prevents conflicts with existing global variables.
-
-The standalone version is appropriate if you already have require.js or another AMD loader in your project. Note that
-the `define` calls in the standalone version are anonymous, meaning that scrappit.js is ready to include into
-your build (e.g. the require.js optimizer), or to `require` onto your page. (This also means you should
-**not** include it as a script tag after your require.js script tag. This will cause a require.js error - Anonymous module definition.)
+`scrappit` does have a noConflict method should you need to use it. However, I recommend you use the AMD pattern instead to avoid conflict with other scrappits.
 
 Tests
 -----
-See `/tests`. The main file, `test.html` contains tests and illustrations of scrappit.js usage.
+Works with:
 
-Also included are tests for scrappit's AMD support in `amd_test.html` and `namespaced_amd_test.html` (which tests the bundled version).
+*   Chrome
+*   Firefox
+*   Safari
+*   Internet Explorer 6+
+*   Opera
+
+The tests are in `/tests` (surprise). `test.html` contains the basic tests and illustrations of scrappit.js usage.
+
+Also included are tests for scrappit's AMD support in `amd-test.html` and `namespaced-amd-test.html`. Make sure to run `make test` before running the tests.
+
+The namespaced-amd-test verifies that scrappit and scrapps use a namespaced AMD build properly. (i.e. that the require js build optimizer renames multiple sections appropriately).
 
 More Information
 ----------------
-Check out the scrappit project at [http://scrappit.org](http://scrappit.org).
+scrappit.js is a small piece of a bigger effort to give users more control and choice on the web. For more information, check out the scrappit project at [http://scrappit.org](http://scrappit.org).
 
 Issues and Contributions
 ------------------------
